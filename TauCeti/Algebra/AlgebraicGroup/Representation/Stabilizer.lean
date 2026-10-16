@@ -7,12 +7,14 @@ module
 
 public import TauCeti.Algebra.AlgebraicGroup.HopfIdeal.Tangent
 public import TauCeti.Algebra.AlgebraicGroup.Representation.Differential
+public import TauCeti.Algebra.AlgebraicGroup.Representation.PointsAction
 public import TauCeti.Algebra.AlgebraicGroup.Tangent.Antipode
 public import TauCeti.Algebra.Coalgebra.Comodule.MatrixCoefficient.Comul
 public import TauCeti.Algebra.Coalgebra.Comodule.MatrixCoefficient.Submodule
 public import TauCeti.Algebra.Coalgebra.Subcomodule.Basic
 public import TauCeti.Algebra.HopfAlgebra.Antipode
 import Mathlib.LinearAlgebra.Dual.Lemmas
+import TauCeti.Algebra.Coalgebra.Subcomodule.PointSeparation
 import TauCeti.LinearAlgebra.TensorProduct.Separation
 
 /-!
@@ -42,6 +44,9 @@ The last statement is the infinitesimal input to the comparison of `G`-stable an
   itself.
 * `Submodule.stabilizerHopfIdeal_le_iff`: its universal property among Hopf ideals.
 * `Submodule.stabilizerHopfIdeal_eq_bot_iff`: it vanishes exactly when `W` is a subcomodule.
+* `Submodule.stabilizerHopfIdeal_eq_bot_of_forall_basePointsRepresentation_mem`: over an
+  algebraically closed field it vanishes when `W` is stable under every rational point of a
+  reduced group of finite type.
 * `Submodule.mem_lieSubalgebra_stabilizerHopfIdeal_iff`: its Lie algebra is the stabilizer of
   `W` under the differentiated representation.
 
@@ -304,6 +309,20 @@ theorem stabilizerHopfIdeal_le_ker_iff (W : Submodule k M) {A : Type*} [CommRing
     · exact (mapsTo_endOfPoint_baseChange_iff W g.ofConv).mp hg ψ w w.2
     · rw [SetLike.mem_coe, RingHom.mem_ker, ← hinv]
       exact (mapsTo_endOfPoint_baseChange_iff W (g⁻¹).ofConv).mp hginv ψ w w.2
+
+/-- Over an algebraically closed field, the stabilizer of a subspace `W` of a representation of a
+reduced affine group of finite type is the whole group as soon as every rational point carries
+`W` into itself: the rational points are dense in a reduced group. -/
+theorem stabilizerHopfIdeal_eq_bot_of_forall_basePointsRepresentation_mem [IsAlgClosed k]
+    [Algebra.FiniteType k H] [IsReduced H] (W : Submodule k M)
+    (hW : ∀ (g : WithConv (H →ₐ[k] k)) {m : M}, m ∈ W →
+      Comodule.basePointsRepresentation (R := k) (H := H) M g m ∈ W) :
+    W.stabilizerHopfIdeal H = ⊥ := by
+  refine (stabilizerHopfIdeal_eq_bot_iff W).mpr fun w hw ↦
+    W.coact_mem_range_of_forall_endOfPoint_tmul_mem_baseChange (K := k) (fun g m hm ↦ ?_) hw
+  rw [Comodule.endOfPoint_tmul, one_smul,
+    Comodule.endOfPoint_one_tmul_eq_one_tmul_basePointsRepresentation]
+  exact Submodule.tmul_mem_baseChange_of_mem _ (hW (WithConv.toConv g) hm)
 
 end Hopf
 
